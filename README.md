@@ -1,46 +1,20 @@
-# XOSS and IGPSport BSC300/IGS630s
+# IGPSport BSC300/BSC300T/IGS630s and XOSS Nav
 
-## Information about maps for XOSS NAV Plus ##
+### Quick Conversion Using `convert.ps1` ###
 
-By default, the XOSS NAV Plus cycling computer comes with maps of Asia preloaded. The map files can be downloaded from the official XOSS website: [XOSS Download Maps](https://www.xoss.co/#/download/maps). However, as is often the case with Chinese products, the maps were generated on August 12, 2023. Upon inspection, it's unclear if the file used for generation is even older. Hence, there's an idea to try generating maps ourselves.
+Instead of manual conversion, you can use the automated PowerShell script:
 
-The maps are saved in the [Mapsforge format](https://github.com/mapsforge/mapsforge), which is advantageous because if XOSS ceases to provide updates (if any), users can generate their own.
+1. **Download a `.pbf` file** from [Geofabrik](https://download.geofabrik.de/) or [BBBike Extract](https://extract.bbbike.org/)
+2. **Place the `.pbf` file(s)** in the main project folder (where `convert.ps1` is located)
+3. **Run `convert.ps1`** in PowerShell
+4. **Enter 2-character country code** when prompted (e.g., `PL`, `DE`, `FR`)
+5. **Done!** The script generates properly named `.map` files ready for your IGPSPORT device
 
-Map files downloaded from XOSS can be previewed using the Cruiser tool available at [Cruiser](https://github.com/devemux86/cruiser/releases).
-
-On the [BBBike Extract](https://extract.bbbike.org/) website, users can generate their own map extracts in Protocolbuffer (PBF) format. PBF map files can also be downloaded from [Geofabrik](https://download.geofabrik.de/).
-
-### Now, let's get a bit technical on how to create our own maps. ###
-
-We'll need a PBF file, which I've described how to obtain above.
-
-1. Download the latest version of OSMOSIS. Currently, it's version 0.49.2 available at [OSMOSIS Releases](https://github.com/openstreetmap/osmosis/releases/tag/0.49.2).
-
-2. Download MapsForge. You can compile it from the source, but pre-built binaries are available as well: [mapsforge-map-writer-0.26.1-jar-with-dependencies.jar](https://github.com/mapsforge/mapsforge/releases/download/0.26.1/mapsforge-map-writer-0.26.1-jar-with-dependencies.jar).
-
-3. Unzip osmosis-0.49.2 (requires Java 21, available at [Oracle](https://www.oracle.com/pl/java/technologies/downloads/)).
-
-4. Navigate to the 'bin' directory.
-
-5. Create a folder named 'Plugins' and place [mapsforge-map-writer-0.26.1-jar-with-dependencies.jar](https://github.com/mapsforge/mapsforge/releases/download/0.26.1/mapsforge-map-writer-0.26.1-jar-with-dependencies.jar) inside it.
-
-6. In the 'bin' folder, create a file named `map.bat` and add the following content:
-
-``` osmosis --rbf file="input.pbf" --tf accept-ways highway=* --tf reject-relations --used-node --mapfile-writer file="output.map" type=hd zoom-interval-conf=14,0,16 ```
-
-7. Place your PBF map file into the 'bin' folder and rename it to input.pbf.
-
-8. Run the map.bat file you created.
-
-9. After several minutes or hours (generating a map of Poland takes around an 2 hours on Ryzen 7 4800), you'll have your output map file (output.map), which you can then upload to your cycling computer.
-
-
-### Additional info ###
-1. The bike computer moderately supports maps that are not squares. In other words, it does support them, but if we generate a map of the Czech Republic and a map of Poland and simultaneously upload them to the bike computer's folder, the southern part of Poland will not be accessible.
-2. If we want to disable a file on the bike computer, simply change its extension to .old. This way, while testing maps, we don't have to delete the originals; changing the extension is sufficient.
-3. Maps do not load at the default zoom level; however, if we generate a zoom level not supported by the bike computer, upon switching to navigation, the bike computer hangs for 5 minutes before resetting. Fortunately, I couldn't crash the bike computer with a bad map file.
-
----
+The script automatically:
+- Detects all `.pbf` files in the folder
+- Processes each file through Osmosis
+- Reads map metadata (date, bounding box)
+- Generates IGPSPORT-compatible file names
 
 ### Information about maps for IGPSport cycling computers ###
 
@@ -429,3 +403,45 @@ This tile-based encoding allows the cycling computer to verify that the map file
 
 - All available tags can be found on the Mapsforge repository: [tag-mapping.xml](https://github.com/mapsforge/mapsforge/blob/master/mapsforge-map-writer/src/main/config/tag-mapping.xml)
 - To disable a map file on the computer, simply change its extension (e.g., to `.old`). This way, when testing maps, you don't need to delete the originals.
+
+## Information about maps for XOSS NAV Plus ##
+
+By default, the XOSS NAV Plus cycling computer comes with maps of Asia preloaded. The map files can be downloaded from the official XOSS website: [XOSS Download Maps](https://www.xoss.co/#/download/maps). However, as is often the case with Chinese products, the maps were generated on August 12, 2023. Upon inspection, it's unclear if the file used for generation is even older. Hence, there's an idea to try generating maps ourselves.
+
+The maps are saved in the [Mapsforge format](https://github.com/mapsforge/mapsforge), which is advantageous because if XOSS ceases to provide updates (if any), users can generate their own.
+
+Map files downloaded from XOSS can be previewed using the Cruiser tool available at [Cruiser](https://github.com/devemux86/cruiser/releases).
+
+On the [BBBike Extract](https://extract.bbbike.org/) website, users can generate their own map extracts in Protocolbuffer (PBF) format. PBF map files can also be downloaded from [Geofabrik](https://download.geofabrik.de/).
+
+### Now, let's get a bit technical on how to create our own maps. ###
+
+We'll need a PBF file, which I've described how to obtain above.
+
+1. Download the latest version of OSMOSIS. Currently, it's version 0.49.2 available at [OSMOSIS Releases](https://github.com/openstreetmap/osmosis/releases/tag/0.49.2).
+
+2. Download MapsForge. You can compile it from the source, but pre-built binaries are available as well: [mapsforge-map-writer-0.26.1-jar-with-dependencies.jar](https://github.com/mapsforge/mapsforge/releases/download/0.26.1/mapsforge-map-writer-0.26.1-jar-with-dependencies.jar).
+
+3. Unzip osmosis-0.49.2 (requires Java 21, available at [Oracle](https://www.oracle.com/pl/java/technologies/downloads/)).
+
+4. Navigate to the 'bin' directory.
+
+5. Create a folder named 'Plugins' and place [mapsforge-map-writer-0.26.1-jar-with-dependencies.jar](https://github.com/mapsforge/mapsforge/releases/download/0.26.1/mapsforge-map-writer-0.26.1-jar-with-dependencies.jar) inside it.
+
+6. In the 'bin' folder, create a file named `map.bat` and add the following content:
+
+``` osmosis --rbf file="input.pbf" --tf accept-ways highway=* --tf reject-relations --used-node --mapfile-writer file="output.map" type=hd zoom-interval-conf=14,0,16 ```
+
+7. Place your PBF map file into the 'bin' folder and rename it to input.pbf.
+
+8. Run the map.bat file you created.
+
+9. After several minutes or hours (generating a map of Poland takes around an 2 hours on Ryzen 7 4800), you'll have your output map file (output.map), which you can then upload to your cycling computer.
+
+
+### Additional info ###
+1. The bike computer moderately supports maps that are not squares. In other words, it does support them, but if we generate a map of the Czech Republic and a map of Poland and simultaneously upload them to the bike computer's folder, the southern part of Poland will not be accessible.
+2. If we want to disable a file on the bike computer, simply change its extension to .old. This way, while testing maps, we don't have to delete the originals; changing the extension is sufficient.
+3. Maps do not load at the default zoom level; however, if we generate a zoom level not supported by the bike computer, upon switching to navigation, the bike computer hangs for 5 minutes before resetting. Fortunately, I couldn't crash the bike computer with a bad map file.
+
+---
