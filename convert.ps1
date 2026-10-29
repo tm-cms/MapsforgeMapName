@@ -29,6 +29,14 @@ do {
 Write-Host "Country code: $CountryCode"
 Write-Host ""
 
+do {
+    $StorageType = Read-Host "Storage mode - hd (disk, slower, low memory) or ram (faster, needs lots of memory) [hd/ram]"
+    $StorageType = $StorageType.ToLower()
+} while ($StorageType -ne "hd" -and $StorageType -ne "ram")
+
+Write-Host "Storage mode: $StorageType"
+Write-Host ""
+
 if (-not (Test-Path $TagConfFile)) {
     Write-Error "Tag configuration file not found: $TagConfFile"
     exit 1
@@ -109,9 +117,15 @@ foreach ($InputFile in $pbfFiles) {
 
     $OutputFile = "$scriptDir\out_$fileIndex.map"
 
-    Write-Host "Running osmosis..."
+    if ($fileType -eq "ram") {
+        $env:JAVA_OPTS = "-XX:MaxRAMPercentage=92"
+    } else {
+        $env:JAVA_OPTS = ""
+    }
 
-    & cmd /c "$OsmosisDir\osmosis.bat" --rbf file="$InputFile" --tag-filter reject-ways amenity=* highway=* building=* natural=* landuse=* leisure=* shop=* waterway=* man_made=* railway=* tourism=* barrier=* boundary=* power=* historic=* emergency=* office=* craft=* healthcare=* aeroway=* route=* public_transport=* bridge=* tunnel=* addr:housenumber=* addr:street=* addr:city=* addr:postcode=* name=* ref=* surface=* access=* foot=* bicycle=* motor_vehicle=* oneway=* lit=* width=* maxspeed=* mountain_pass=* religion=* tracktype=* area=* sport=* piste=* admin_level=* aerialway=* lock=* roof=* military=* wood=* --tag-filter accept-relations natural=water place=islet --used-node --rbf file="$InputFile" --tag-filter accept-ways highway=* waterway=* landuse=* natural=* place=* --tag-filter accept-relations highway=* waterway=* landuse=* natural=* place=* --used-node --merge --mapfile-writer file="$OutputFile" type=hd zoom-interval-conf=13,13,13,14,14,14 threads=4 tag-conf-file="$TagConfFile"
+    Write-Host "Running osmosis ($fileType)..."
+
+    & cmd /c "$OsmosisDir\osmosis.bat" --rbf file="$InputFile" workers=4 --used-node --mapfile-writer file="$OutputFile" type=$fileType zoom-interval-conf=13,13,13,14,14,14 threads=8 tag-conf-file="$TagConfFile"
 
     if (-not (Test-Path $OutputFile)) {
         Write-Warning "Osmosis did not generate file for: $fileName - skipping"
